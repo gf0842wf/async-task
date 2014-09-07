@@ -36,8 +36,9 @@ class Task(object):
         """
         if block:
             _data = self.conn.brpop("task.mq", timeout)
-            if not _data: raise TaskError("timeout")
-            return
+            if not _data:
+                raise TaskError("timeout")
+                return
         else:
             _data = self.conn.rpop("task.mq")
             return
