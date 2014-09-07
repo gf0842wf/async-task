@@ -18,7 +18,7 @@ class Task(object):
             redis.connection.socket = socket
         self.conn = redis.StrictRedis(host=host, port=port, db=db)
 
-    def push_msg(self, msg, block=False):
+    def req_msg(self, msg, block=False):
         """@param tap: 消息队列标识(域.具体名)
         """
         tap = "task."+uuid.uuid1().hex
@@ -28,7 +28,7 @@ class Task(object):
         if block:
             return self.conn.brpop(tap)
         
-    def pull_msg(self, block=True, timeout=0):
+    def process_msg(self, block=True, timeout=0):
         """@param timeout: 当block=True时才有用
         """
         if block:
@@ -43,7 +43,7 @@ class Task(object):
         
         tap, msg = pickle.loads(data)
         
-        self.conn.lpush(tap, "flag.ack")
+        self.conn.lpush(tap, "flag.ack.done")
         
         return (tap, msg)
     
@@ -54,10 +54,10 @@ if __name__ == "__main__":
     t = Task(use_greenlets=True)
 
     def f1():
-        print t.push_msg("fuck", block=True)
+        print t.req_msg("fuck", block=True)
         
     def f2():
-        print t.pull_msg(block=True, timeout=120)
+        print t.process_msg(block=True, timeout=120)
         
     gevent.spawn(f2)
     gevent.spawn(f1)
