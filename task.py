@@ -106,7 +106,9 @@ if __name__ == "__main__":
     
     mq = ARGS.get("mq", "task.mq")
     green = int(ARGS.get("green", 1))
-    task_mod = __import__(ARGS.get("task_mod")) or None
+    smod = ARGS.get("task_mod")
+    lmod = smod.rsplit(".")
+    task_mod = __import__(lmod[0], globals(), locals(), lmod[1:])
     
     if green:
         t = Task(mq=mq, use_greenlets=green, task_mod=task_mod)
@@ -115,20 +117,5 @@ if __name__ == "__main__":
     else:
         t = Task(mq=mq, use_greenlets=green, task_mod=task_mod)
         t.process(block=True, timeout=0)
-    # python task.py --mq=task.mq --green=0 --task_mod="sample.mytask"
-    # 启动多个此实例, 注意此命令的执行目录, 注意task_mod的格式
-    
-#     import gevent
-#     
-#     t = Task(mq="task.mq", use_greenlets=True)
-# 
-#     def f1():
-#         print t.block_echo(10, "abc")
-#         
-#     def f2():
-#         t.process(block=True, timeout=120)
-#         
-#     gevent.spawn(f2)
-#     gevent.spawn(f1)
-# 
-#     gevent.wait()
+    # python task.py --mq=task.mq --green=1 --task_mod="sample.xx.mytask"
+    # 启动多个此实例, 注意此命令的执行目录, 注意task_mod的格式 表示 from sample.xx import mytask
