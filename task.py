@@ -108,7 +108,7 @@ if __name__ == "__main__":
     green = int(ARGS.get("green", 1))
     smod = ARGS.get("task_mod")
     lmod = smod.rsplit(".")
-    task_mod = __import__(lmod[0], globals(), locals(), lmod[1:])
+    task_mod = __import__(smod, globals(), locals(), lmod[1:])
     
     if green:
         t = Task(mq=mq, use_greenlets=green, task_mod=task_mod)
@@ -117,5 +117,5 @@ if __name__ == "__main__":
     else:
         t = Task(mq=mq, use_greenlets=green, task_mod=task_mod)
         t.process(block=True, timeout=0)
-    # python task.py --mq=task.mq --green=1 --task_mod="sample.xx.mytask"
-    # 最好启动 ncpu 个实例, 注意此命令的执行目录, 注意task_mod的格式 "sample.xx.mytask"表示 from sample.xx import mytask
+    # pypy task.py --mq=task.mq --green=1 --task_mod=sample.mytask
+    # 最好启动 ncpu 个实例, 注意此命令的执行目录, 注意task_mod的格式 sample.mytask表示 from sample import mytask
