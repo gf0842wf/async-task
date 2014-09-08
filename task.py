@@ -118,4 +118,4 @@ if __name__ == "__main__":
         t = Task(mq=mq, use_greenlets=green, task_mod=task_mod)
         t.process(block=True, timeout=0)
     # python task.py --mq=task.mq --green=1 --task_mod="sample.xx.mytask"
-    # 启动多个此实例, 注意此命令的执行目录, 注意task_mod的格式 表示 from sample.xx import mytask
+    # 最好启动 ncpu 个实例, 注意此命令的执行目录, 注意task_mod的格式 "sample.xx.mytask"表示 from sample.xx import mytask
