@@ -103,16 +103,20 @@ if __name__ == "__main__":
     ARGS = filter(lambda arg: isinstance(arg, list) and len(arg)==2, 
                   [arg.lstrip("-").split("=") for arg in sys.argv[1:]])
     ARGS = dict(ARGS)
+    
+    mq = ARGS.get("mq", "task.mq")
     green = int(ARGS.get("green", 1))
+    task_mod = __import__(ARGS.get("task_mod")) or None
+    
     if green:
-        t = Task(mq=ARGS.get("mq", "task.mq"), use_greenlets=green)
+        t = Task(mq=mq, use_greenlets=green, task_mod=task_mod)
         gevent.spawn(lambda: t.process(block=True, timeout=0))
         gevent.wait()
     else:
-        t = Task(mq=ARGS.get("mq", "task.mq"), use_greenlets=green)
+        t = Task(mq=mq, use_greenlets=green, task_mod=task_mod)
         t.process(block=True, timeout=0)
-    # python task.py --mq=task.mq --green=0
-    # 启动多个此实例
+    # python task.py --mq=task.mq --green=0 --task_mod="sample.mytask"
+    # 启动多个此实例, 注意此命令的执行目录, 注意task_mod的格式
     
 #     import gevent
 #     
