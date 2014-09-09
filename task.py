@@ -77,7 +77,7 @@ class Task(object):
         
         return (tap, msg)
     
-    def _green_push(self, tap, value):
+    def _push_resp(self, tap, value):
         self.conn.lpush(tap, self.dumps(value))
         self.conn.expire(tap, 3600) # 如果是nonblock调用,则会产出废list,用这个过期清除
         
@@ -91,9 +91,9 @@ class Task(object):
             name, args, kw = msg
             value = getattr(self.task_mod, name)(*args, **kw)
             if self.green:
-                gevent.spawn(self._green_push, tap, value)
+                gevent.spawn(self._push_resp, tap, value)
             else:
-                self._green_push(tap, value)
+                self._push_resp(tap, value)
                 
     def _block_echo(self, xx):
         return xx
