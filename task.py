@@ -87,7 +87,7 @@ class Task(object):
     def process(self, block=True, timeout=0):
         assert block == True
         
-        while True:
+        while 1:
             data = self.resp_msg(block, timeout)
             if not data: continue
             tap, msg = data
