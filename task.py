@@ -35,6 +35,7 @@ class Task(object):
         data = self.dumps((tap, msg))
         
         self.conn.lpush(self.mq, data)
+        
         if block:
             data = self.conn.brpop(tap, timeout)
             if not data:
@@ -44,7 +45,7 @@ class Task(object):
             return self.loads(_value)
     
     def call(self, name, block, timeout, args=(), kw={}):
-        msg = (name, args, kw)
+        msg = (name, block, args, kw)
         return self.req_msg(msg, block, timeout)
     
     def __getattr__(self, name):
@@ -77,9 +78,11 @@ class Task(object):
         
         return (tap, msg)
     
-    def _push_resp(self, tap, value):
+    def _push_resp(self, tap, value, req_block):
         self.conn.lpush(tap, self.dumps(value))
-        self.conn.expire(tap, 3600) # 如果是nonblock调用,则会产出废list,用这个过期清除
+        if not req_block:
+            # 如果是nonblock调用,则会产出废list,用这个过期清除
+            self.conn.expire(tap, 60)
         
     def process(self, block=True, timeout=0):
         assert block == True
@@ -88,12 +91,12 @@ class Task(object):
             data = self.resp_msg(block, timeout)
             if not data: continue
             tap, msg = data
-            name, args, kw = msg
+            name, req_block, args, kw = msg
             value = getattr(self.task_mod, name)(*args, **kw)
             if self.green:
-                gevent.spawn(self._push_resp, tap, value)
+                gevent.spawn(self._push_resp, tap, value, req_block)
             else:
-                self._push_resp(tap, value)
+                self._push_resp(tap, value, req_block)
                 
     def _block_echo(self, xx):
         return xx
