@@ -5,7 +5,7 @@
 from task import Task
 import time
     
-tk = Task(mq="task.mq", use_greenlets=True)
+tk = Task(mq="task.mq", green=True)
 
 t1 = time.time()
 print tk.block_add(60, 2, 4)
