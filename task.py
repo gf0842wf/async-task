@@ -104,6 +104,9 @@ if __name__ == "__main__":
                   [arg.lstrip("-").split("=") for arg in sys.argv[1:]])
     ARGS = dict(ARGS)
     
+    host = ARGS.get("host", "localhost")
+    port = int(ARGS.get("port", 6379))
+    db = ARGS.get("db", 0)
     mq = ARGS.get("mq", "task.mq")
     green = int(ARGS.get("green", 1))
     smod = ARGS.get("task_mod")
@@ -115,7 +118,8 @@ if __name__ == "__main__":
         gevent.spawn(lambda: t.process(block=True, timeout=0))
         gevent.wait()
     else:
-        t = Task(mq=mq, use_greenlets=green, task_mod=task_mod)
+        t = Task(host=host, port=port, db=db, mq=mq, use_greenlets=green, task_mod=task_mod)
         t.process(block=True, timeout=0)
+        
     # pypy task.py --mq=task.mq --green=1 --task_mod=sample.mytask
     # 最好启动 ncpu 个实例, 注意此命令的执行目录, 注意task_mod的格式 sample.mytask表示 from sample import mytask
