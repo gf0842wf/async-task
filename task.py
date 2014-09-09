@@ -14,15 +14,15 @@ class TaskError(Exception):
 
 class Task(object):
     
-    def __init__(self, host="localhost", port=6379, db=0, mq="task.mq", use_greenlets=True, task_mod=None):
+    def __init__(self, host="localhost", port=6379, db=0, mq="task.mq", green=True, task_mod=None):
         self.mq = mq
         self.task_mod = task_mod or self
-        self.use_greenlets = use_greenlets
+        self.green = green
         
         self.dumps = pickle.dumps
         self.loads = pickle.loads
         
-        if use_greenlets:
+        if green:
             redis.connection.socket = green_socket
         self.conn = redis.StrictRedis(host=host, port=port, db=db)
 
@@ -90,7 +90,7 @@ class Task(object):
             tap, msg = data
             name, args, kw = msg
             value = getattr(self.task_mod, name)(*args, **kw)
-            if self.use_greenlets:
+            if self.green:
                 gevent.spawn(self._green_push, tap, value)
             else:
                 self._green_push(tap, value)
@@ -113,13 +113,12 @@ if __name__ == "__main__":
     lmod = smod.rsplit(".")
     task_mod = __import__(smod, globals(), locals(), lmod[1:])
     
+    task = Task(host=host, port=port, db=db, mq=mq, green=green, task_mod=task_mod)
     if green:
-        t = Task(mq=mq, use_greenlets=green, task_mod=task_mod)
-        gevent.spawn(lambda: t.process(block=True, timeout=0))
+        gevent.spawn(lambda: task.process(block=True, timeout=0))
         gevent.wait()
     else:
-        t = Task(host=host, port=port, db=db, mq=mq, use_greenlets=green, task_mod=task_mod)
-        t.process(block=True, timeout=0)
+        task.process(block=True, timeout=0)
         
     # pypy task.py --mq=task.mq --green=1 --task_mod=sample.mytask
     # 最好启动 ncpu 个实例, 注意此命令的执行目录, 注意task_mod的格式 sample.mytask表示 from sample import mytask
